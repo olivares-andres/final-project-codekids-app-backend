@@ -19,6 +19,17 @@ class User(db.Model):
             #el type_user indicara si es usuario o profesor (1= usuario - 2= profesor)
         }
 
+class News(db.Model):
+    __tablename__= 'news'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique =True, nullable = False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "email": self.email
+        }
+    
 
 #Tabla Planeta 
 class Planeta(db.Model):
