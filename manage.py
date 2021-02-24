@@ -5,6 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
+from models import db, User, News
 from models import db, User, Planeta, Mision
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -154,6 +155,28 @@ def login():
         else:
             return jsonify({"msg": "nombre de usuario o contraseña incorrecta, verifique sus datos"}), 401
 
+@app.route('/api/news', methods=['POST', 'GET'])
+def news(id = None):
+    if request.method == 'GET':
+        if id is not None:
+            news = News.query.get(id)
+            if not news: return jsonify({"msg": "bad request"}), 404
+            return jsonify(news.serialize()), 200
+        else:
+            news_all = News.query.all()
+            news_all = list(map(lambda news: news.serialize(), news_all))
+            return jsonify(news_all), 200
+    if request.method == 'POST':
+        email = request.json.get("email")
+
+    news = News()
+    news.email = email
+
+    db.session.add(news)
+    db.session.commit()
+
+    return jsonify({"msg":"ok"}), 200
+    
 @app.route('/api/planetas', methods=['GET', 'POST'])
 @app.route('/api/planeta/<int:id>', methods=['GET', 'POST'])
 def planetas(id = None):
@@ -230,6 +253,7 @@ def misiones(id = None):
 
         return jsonify(mision.serialize_with_planet()),201
 
+    
 
 #para crear la base de datos usar los siguientes comandos:
 # python manage.py db init
