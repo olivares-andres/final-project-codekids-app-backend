@@ -1,5 +1,6 @@
 import os
-from flask import Flask, jsonify, request, render_template
+from datetime import datetime
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS
@@ -64,7 +65,7 @@ def root():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
+    if request.method == 'POST':        
         username = request.form.get('username', None)
         password = request.form.get('password', None)
         
@@ -86,7 +87,10 @@ def register():
             avatar = request.files['avatar']
             if avatar.filename != '':           
                 if avatar and allowed_images_file(avatar.filename):
+                    now = datetime.now()
+                    dt_string = now.strftime("%d-%m-%Y-%H%M%S-")
                     filename = secure_filename(avatar.filename)
+                    filename = str(dt_string+filename)
                     avatar.save(os.path.join(os.path.join(app.config['UPLOAD_FOLDER'], 'img/avatars'), filename))
                 else:
                     return jsonify({"msg": "tipo de imagen no permitida o extension incorrecta"})
@@ -253,7 +257,10 @@ def misiones(id = None):
 
         return jsonify(mision.serialize_with_planet()),201
 
-    
+@app.route('/api/user/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'img/avatars'),
+                               filename)  
 
 #para crear la base de datos usar los siguientes comandos:
 # python manage.py db init
