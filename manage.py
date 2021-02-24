@@ -139,7 +139,7 @@ def login():
         
         #si NO existe un usuario entonces devolvemos mensaje de error
         if  not user:
-            return jsonify({"msg": "Username existe"}), 400
+            return jsonify({"msg": "Username no existe"}), 400
         
         #Validamos la contraseña a traves del hash encriptado si lo que ingresamos es igual entonces pasa 
         if bcrypt.check_password_hash(user.password, password):
