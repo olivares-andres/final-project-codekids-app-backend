@@ -5,7 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
-from models import db, User
+from models import db, User, Planeta, Mision
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -93,7 +93,8 @@ def register():
         user = User()
         user.username = username
         #ahora vamos a usar Bcrypt para encriptar el password y no sea visible
-        user.password = bcrypt.generate_password_hash(password)        
+        user.password = bcrypt.generate_password_hash(password)  
+        user.type_user = 1      
 
         #validamos si el archivo de imagen avatar tiene algún nombre en caso contrario vamos a validar el nombre por defecto
         if 'avatar' in request.files:
@@ -137,7 +138,7 @@ def login():
         
         #si NO existe un usuario entonces devolvemos mensaje de error
         if  not user:
-            return jsonify({"msg": "Username existe"}), 400
+            return jsonify({"msg": "Username no existe"}), 400
         
         #Validamos la contraseña a traves del hash encriptado si lo que ingresamos es igual entonces pasa 
         if bcrypt.check_password_hash(user.password, password):
@@ -153,6 +154,81 @@ def login():
         else:
             return jsonify({"msg": "nombre de usuario o contraseña incorrecta, verifique sus datos"}), 401
 
+@app.route('/api/planetas', methods=['GET', 'POST'])
+@app.route('/api/planeta/<int:id>', methods=['GET', 'POST'])
+def planetas(id = None):
+    if request.method == 'GET':
+        if id is not None:
+            planeta = Planeta.query.get(id)
+            if not planeta: return jsonify({"msg": "planeta no existe"}), 404
+            return jsonify(planeta.serialize()),200
+        else:
+            planetas = Planeta.query.all()
+            planetas = list(map(lambda planeta : planeta.serialize(), planetas))
+            return jsonify(planetas),200
+
+    if request.method == 'POST':
+        nombre_planeta = request.json.get('nombre_planeta')
+    
+    if not nombre_planeta: return jsonify({"msg": "nombre de planeta requerido"})
+
+    planeta = Planeta()
+    planeta.nombre_planeta = nombre_planeta
+    #aqui hacemos el insert a la db
+    db.session.add(planeta)
+        #aqui hacemos el commit para validar
+    db.session.commit()
+
+    return jsonify(planeta.serialize()), 201
+
+
+
+@app.route('/api/planeta/<int:planeta_id>/mision', methods=['GET'])
+@app.route('/api/planeta/<int:planeta_id>/mision/<int:id>', methods=['GET'])
+def planeta_with_mision(planeta_id, id = None): 
+    if request.method == 'GET':
+        if id is not None:
+            mision = Mision.query.filter_by(planeta_id = planeta_id, id =id).first()
+            if not mision: return jsonify({"msg": "Mision no encontrada"}), 404
+            return jsonify(mision.serialize()), 200
+        else:
+            misiones = Mision.query.filter_by(planeta_id=planeta_id)
+            misiones = list(map(lambda mision: mision.serialize(), misiones))
+            return jsonify(misiones),200
+
+
+
+@app.route('/api/misiones', methods=['GET', 'POST'])
+@app.route('/api/mision/<int:id>', methods=['GET', 'PUT'])
+def misiones(id = None):
+    if request.method == 'GET':
+        if id is not None:
+            mision = Mision.query.get(id)
+            if not mision: return jsonify({"msg": "mision no existe"}), 404
+            return jsonify(mision.serialize()),200
+        else:
+            misiones = Mision.query.all()
+            misiones = list(map(lambda mision : mision.serialize_with_planet(), misiones))
+            return jsonify(misiones), 200
+
+    if request.method == 'POST':
+        instrucciones = request.json.get("instrucciones")
+        codigo = request.json.get("codigo")
+        soluciones = request.json.get("soluciones")
+        planeta_id = request.json.get("planeta_id")
+
+        mision = Mision()
+        mision.instrucciones = instrucciones
+        mision.soluciones = soluciones
+        mision.codigo = codigo
+        mision.planeta_id = planeta_id 
+       
+       #aqui hacemos el insert a la db
+        db.session.add(mision)
+        #aqui hacemos el commit para validar
+        db.session.commit()
+
+        return jsonify(mision.serialize_with_planet()),201
 
 
 #para crear la base de datos usar los siguientes comandos:
