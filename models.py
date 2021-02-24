@@ -5,7 +5,6 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique =True, nullable = False)
     username = db.Column(db.String(100), unique =True, nullable = False)
     password = db.Column(db.String(100), nullable= False)
     avatar = db.Column(db.String(100), nullable=True, default = 'default.png')
@@ -14,7 +13,6 @@ class User(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "email": self.email,
             "username": self.username,
             "avatar": self.avatar,
             "type_user":self.type_user
