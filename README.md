@@ -1,6 +1,8 @@
 # final-project-codekids-app-backend
 backend del proyecto final de 4geeks
 
+Link al frontend final project: https://github.com/manugarcal/final-project-codekids-app
+
 para iniciar 
 
 pipenv shell
