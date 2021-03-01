@@ -257,6 +257,20 @@ def misiones(id = None):
 
         return jsonify(mision.serialize_with_planet()),201
 
+@app.route('/api/users/', methods=['GET'])
+@app.route('/api/user/<int:id>', methods=['GET', 'PUT'])
+def users(id = None):
+    if request.method == 'GET':
+        if id is not None:
+            user = User.query.get(id)
+            if not user: return jsonify({"msg": "usuario no existe"}), 404
+            return jsonify(user.serialize()),200
+        else:
+            usuarios = User.query.all()
+            usuarios = list(map(lambda usuario : usuario.serialize(), usuarios))
+            return jsonify(usuarios), 200
+
+
 @app.route('/api/user/<filename>')
 def uploaded_file(filename):
     return send_from_directory(os.path.join(app.config['UPLOAD_FOLDER'], 'img/avatars'),
